@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Карафон</string>
+
+    <!-- Main Screen -->
+    <string name="btn_sing">Петь</string>
+    <string name="btn_stop">Стоп</string>
+    <string name="microphone_volume">🎤 Микрофон</string>
+    <string name="music_volume">🎵 Музыка</string>
+    <string name="effects">Эффекты</string>
+    <string name="settings">Настройки</string>
+
+    <!-- Settings -->
+    <string name="audio_device">🔊 Аудиоустройство</string>
+    <string name="theme">🎨 Внешний вид</string>
+    <string name="duet_mode">👥 Режим дуэта</string>
+    <string name="audio_settings">🎧 Настройки звука</string>
+    <string name="about">ℹ️ О приложении</string>
+    <string name="done">Готово</string>
+
+    <!-- Effects -->
+    <string name="sound_effects">Звуковые эффекты</string>
+    <string name="reverb">🎪 Реверберация</string>
+    <string name="echo">🔁 Эхо</string>
+    <string name="presets">🎭 Пресеты</string>
+
+    <!-- Permissions -->
+    <string name="permission_microphone_rationale">Для работы караоке нужен доступ к микрофону</string>
+    <string name="permission_bluetooth_rationale">Для подключения к Bluetooth-колонкам нужно разрешение</string>
+</resources>
