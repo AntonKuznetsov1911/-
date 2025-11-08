@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -24,16 +25,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.karafon.app.core.audio.AudioEngine
+import com.karafon.app.core.recording.RecordingManager
 
 @Composable
-fun MainScreen(audioEngine: AudioEngine) {
+fun MainScreen(
+    audioEngine: AudioEngine,
+    recordingManager: RecordingManager
+) {
     val isRecording by audioEngine.isRecording.collectAsState()
     val micVolume by audioEngine.microphoneVolume.collectAsState()
     val musicVolume by audioEngine.musicVolume.collectAsState()
     val inputLevel by audioEngine.currentInputLevel.collectAsState()
+    val isRecordingAudio by recordingManager.isRecording.collectAsState()
 
     var showSettings by remember { mutableStateOf(false) }
     var showEffects by remember { mutableStateOf(false) }
+    var showRecordings by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -106,6 +113,12 @@ fun MainScreen(audioEngine: AudioEngine) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 ControlButton(
+                    icon = Icons.Filled.List,
+                    title = "Записи",
+                    onClick = { showRecordings = true }
+                )
+
+                ControlButton(
                     icon = Icons.Filled.Star,
                     title = "Эффекты",
                     onClick = { showEffects = true }
@@ -119,6 +132,25 @@ fun MainScreen(audioEngine: AudioEngine) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        // Record button in top right
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            RecordButton(
+                isRecording = isRecordingAudio,
+                onClick = {
+                    if (isRecordingAudio) {
+                        recordingManager.stopRecording()
+                    } else {
+                        recordingManager.startRecording()
+                    }
+                }
+            )
         }
     }
 
@@ -135,6 +167,44 @@ fun MainScreen(audioEngine: AudioEngine) {
             audioEngine = audioEngine,
             onDismiss = { showEffects = false }
         )
+    }
+
+    if (showRecordings) {
+        RecordingScreen(
+            recordingManager = recordingManager,
+            onDismiss = { showRecordings = false }
+        )
+    }
+}
+
+@Composable
+fun RecordButton(
+    isRecording: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(if (isRecording) Color.Red else Color.White.copy(alpha = 0.2f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isRecording) {
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(Color.Red)
+            )
+        }
     }
 }
 

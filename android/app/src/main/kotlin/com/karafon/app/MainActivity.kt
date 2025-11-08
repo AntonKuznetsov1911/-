@@ -1,8 +1,5 @@
 package com.karafon.app
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,16 +7,19 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.core.content.ContextCompat
 import com.karafon.app.core.audio.AudioEngine
+import com.karafon.app.core.permissions.PermissionManager
+import com.karafon.app.core.recording.RecordingManager
 import com.karafon.app.ui.screens.MainScreen
 import com.karafon.app.ui.theme.KarafonTheme
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var audioEngine: AudioEngine
+    private lateinit var recordingManager: RecordingManager
+    private lateinit var permissionManager: PermissionManager
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -35,8 +35,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize audio engine
+        // Initialize managers
         audioEngine = AudioEngine(this)
+        recordingManager = RecordingManager(this)
+        permissionManager = PermissionManager(this)
 
         // Request permissions
         requestPermissions()
@@ -47,38 +49,44 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    KarafonApp(audioEngine)
+                    KarafonApp(
+                        audioEngine = audioEngine,
+                        recordingManager = recordingManager
+                    )
                 }
             }
         }
     }
 
     private fun requestPermissions() {
-        val permissions = mutableListOf(
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.MODIFY_AUDIO_SETTINGS
-        )
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+        val missingPermissions = permissionManager.getMissingPermissions()
+        if (missingPermissions.isNotEmpty()) {
+            permissionLauncher.launch(missingPermissions.toTypedArray())
         }
+    }
 
-        val permissionsToRequest = permissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (permissionsToRequest.isNotEmpty()) {
-            permissionLauncher.launch(permissionsToRequest.toTypedArray())
+    override fun onPause() {
+        super.onPause()
+        // Stop audio when app goes to background
+        if (audioEngine.isRecording.value) {
+            audioEngine.stop()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         audioEngine.release()
+        recordingManager.release()
     }
 }
 
 @Composable
-fun KarafonApp(audioEngine: AudioEngine) {
-    MainScreen(audioEngine = audioEngine)
+fun KarafonApp(
+    audioEngine: AudioEngine,
+    recordingManager: RecordingManager
+) {
+    MainScreen(
+        audioEngine = audioEngine,
+        recordingManager = recordingManager
+    )
 }

@@ -9,8 +9,11 @@ import SwiftUI
 
 struct MainView: View {
     @EnvironmentObject var audioEngine: AudioEngine
+    @StateObject private var recordingManager = RecordingManager()
+    @StateObject private var deviceManager = DeviceManager()
     @State private var showSettings = false
     @State private var showEffects = false
+    @State private var showRecordings = false
 
     var body: some View {
         NavigationView {
@@ -74,7 +77,12 @@ struct MainView: View {
                     Spacer()
 
                     // Bottom controls
-                    HStack(spacing: 60) {
+                    HStack(spacing: 40) {
+                        // Recordings button
+                        ControlButton(icon: "music.note.list", title: "Записи") {
+                            showRecordings.toggle()
+                        }
+
                         // Effects button
                         ControlButton(icon: "waveform.circle.fill", title: "Эффекты") {
                             showEffects.toggle()
@@ -91,10 +99,53 @@ struct MainView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
                     .environmentObject(audioEngine)
+                    .environmentObject(deviceManager)
             }
             .sheet(isPresented: $showEffects) {
                 EffectsView()
                     .environmentObject(audioEngine)
+            }
+            .sheet(isPresented: $showRecordings) {
+                RecordingView()
+                    .environmentObject(recordingManager)
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    RecordButton(isRecording: recordingManager.isRecording) {
+                        if recordingManager.isRecording {
+                            recordingManager.stopRecording()
+                        } else {
+                            recordingManager.startRecording()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Record Button
+
+struct RecordButton: View {
+    let isRecording: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(isRecording ? Color.red : Color.white.opacity(0.2))
+                    .frame(width: 40, height: 40)
+
+                if isRecording {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.white)
+                        .frame(width: 16, height: 16)
+                } else {
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 20, height: 20)
+                }
             }
         }
     }
